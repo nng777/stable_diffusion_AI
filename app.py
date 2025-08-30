@@ -1,5 +1,6 @@
 import argparse
 from diffusers import OnnxStableDiffusionPipeline, DPMSolverMultistepScheduler
+from transformers import CLIPTextModel, CLIPTokenizer
 
 def main():
     p = argparse.ArgumentParser()
@@ -12,9 +13,14 @@ def main():
     p.add_argument("--width", type=int, default=512)
     args = p.parse_args()
 
+    text_encoder = CLIPTextModel.from_pretrained("openai/clip-vit-large-patch14")
+    tokenizer    = CLIPTokenizer.from_pretrained("openai/clip-vit-large-patch14")
+
     pipe = OnnxStableDiffusionPipeline.from_pretrained(
-        "sd15-onnx",                     # <-- exported folder
-        provider="DmlExecutionProvider", # DirectML for AMD iGPU
+        "sd15-onnx",
+        provider="DmlExecutionProvider",
+        text_encoder=text_encoder,
+        tokenizer=tokenizer,
     )
     pipe.scheduler = DPMSolverMultistepScheduler.from_config(
         pipe.scheduler.config, use_karras_sigmas=True
